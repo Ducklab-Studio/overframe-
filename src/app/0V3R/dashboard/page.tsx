@@ -221,7 +221,7 @@ function PortfolioTab() {
                   {uploadingVideo ? 'Enviando vídeo...' : 'Clique para enviar vídeo'}
                   <input type="file" accept="video/mp4,video/webm,video/mov,video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadVideo(f); }} />
                 </label>
-                {form.videoUrl && form.videoUrl.startsWith('/uploads/') && (
+                {form.videoUrl && (form.videoUrl.includes('cloudinary.com') || /\.(mp4|webm|mov)(\?|$)/i.test(form.videoUrl)) && (
                   <div className="relative w-full rounded-lg overflow-hidden bg-black/40">
                     <video src={form.videoUrl} controls className="w-full max-h-48 object-cover" />
                     <button onClick={() => setForm(f => ({ ...f, videoUrl: '' }))} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors">×</button>

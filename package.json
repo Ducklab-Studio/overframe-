@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "cloudinary": "^2.10.0",
     "framer-motion": "^12.41.0",
     "jose": "^5",
     "lucide-react": "^1.21.0",
@@ -29,10 +30,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@eslint/eslintrc": "^3",
     "eslint": "^9",
     "eslint-config-next": "^15",
     "postcss": "^8.5.10",

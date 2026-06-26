@@ -92,7 +92,18 @@ function PortfolioTab() {
   const [items, setItems] = useState<PortfolioItem[]>([]);
   const [modal, setModal] = useState<null | 'new' | PortfolioItem>(null);
   const [form, setForm] = useState({ title: '', category: '', description: '', imageUrl: '', videoUrl: '', projectUrl: '', featured: false, order: 0 });
+  const [uploading, setUploading] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  const uploadImage = async (file: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData(); fd.append('file', file);
+      const r = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (r.ok) { const { url } = await r.json(); setForm(f => ({ ...f, imageUrl: url })); toast('Imagem enviada!'); }
+      else toast('Erro no upload da imagem', 'err');
+    } finally { setUploading(false); }
+  };
 
   const uploadVideo = async (file: File) => {
     setUploadingVideo(true);
@@ -157,7 +168,22 @@ function PortfolioTab() {
             <Field label="Título"><input className={inputCls} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Nome do projeto" /></Field>
             <Field label="Categoria"><input className={inputCls} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} placeholder="Ex: Plataforma Web" /></Field>
             <Field label="Descrição"><textarea className={inputCls} rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Descrição curta" /></Field>
-            <Field label="URL da Imagem"><input className={inputCls} value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="/portfolio/imagem.jpg" /></Field>
+            <Field label="Imagem do Projeto">
+              <div className="space-y-2">
+                <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg border-2 border-dashed border-white/10 cursor-pointer hover:border-[#E10600]/40 transition-colors text-sm text-white/40 hover:text-white/70 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                  {uploading ? 'Enviando...' : 'Clique para enviar foto'}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
+                </label>
+                {form.imageUrl && (
+                  <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black/40">
+                    <img src={form.imageUrl} alt="preview" className="w-full h-full object-cover" />
+                    <button onClick={() => setForm(f => ({ ...f, imageUrl: '' }))} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors">×</button>
+                  </div>
+                )}
+                <input className={inputCls} value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="Ou cole uma URL de imagem" />
+              </div>
+            </Field>
             <Field label="Vídeo do Projeto">
               <div className="space-y-2">
                 <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg border-2 border-dashed border-white/10 cursor-pointer hover:border-[#E10600]/40 transition-colors text-sm text-white/40 hover:text-white/70 ${uploadingVideo ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -165,7 +191,7 @@ function PortfolioTab() {
                   {uploadingVideo ? 'Enviando vídeo...' : 'Clique para enviar vídeo'}
                   <input type="file" accept="video/mp4,video/webm,video/mov,video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadVideo(f); }} />
                 </label>
-                {form.videoUrl && form.videoUrl.startsWith('/uploads/') && (
+                {form.videoUrl && (form.videoUrl.includes('cloudinary.com') || /\.(mp4|webm|mov)(\?|$)/i.test(form.videoUrl)) && (
                   <div className="relative w-full rounded-lg overflow-hidden bg-black/40">
                     <video src={form.videoUrl} controls className="w-full max-h-48 object-cover" />
                     <button onClick={() => setForm(f => ({ ...f, videoUrl: '' }))} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors">×</button>
