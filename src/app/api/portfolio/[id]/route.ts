@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { ZodError } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
@@ -24,6 +25,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const body = await req.json();
     const data = portfolioSchema.partial().parse(body);
     const item = await prisma.portfolio.update({ where: { id }, data });
+    revalidatePath('/');
     return NextResponse.json(item);
   } catch (e: unknown) {
     if (e instanceof ZodError) return NextResponse.json({ error: e.issues }, { status: 422 });
@@ -38,6 +40,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   try {
     const { id } = await params;
     await prisma.portfolio.delete({ where: { id } });
+    revalidatePath('/');
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });

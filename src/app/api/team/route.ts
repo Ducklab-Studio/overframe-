@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
 import { z } from 'zod';
@@ -25,5 +26,6 @@ export async function POST(req: NextRequest) {
   const body = schema.safeParse(await req.json());
   if (!body.success) return NextResponse.json({ error: body.error.flatten() }, { status: 400 });
   const member = await prisma.teamMember.create({ data: body.data });
+  revalidatePath('/');
   return NextResponse.json(member, { status: 201 });
 }

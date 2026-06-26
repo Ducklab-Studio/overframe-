@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { ZodError } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = portfolioSchema.parse(body);
     const item = await prisma.portfolio.create({ data });
+    revalidatePath('/');
     return NextResponse.json(item, { status: 201 });
   } catch (e: unknown) {
     if (e instanceof ZodError) return NextResponse.json({ error: e.issues }, { status: 422 });
