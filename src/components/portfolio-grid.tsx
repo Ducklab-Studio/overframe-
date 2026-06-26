@@ -9,6 +9,7 @@ export interface PortfolioItem {
   category: string;
   description: string | null;
   imageUrl: string | null;
+  videoUrl: string | null;
   projectUrl: string | null;
   featured: boolean;
   technologies: string[];
@@ -57,12 +58,22 @@ function ProjectModal({ item, onClose }: { item: PortfolioItem; onClose: () => v
           className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-[#111111] border border-white/10 shadow-2xl"
           onClick={e => e.stopPropagation()}
         >
-          {/* Imagem do projeto */}
+          {/* Mídia do projeto */}
           <div className="relative w-full aspect-[16/8] overflow-hidden rounded-t-2xl bg-[#0a0a0a]">
             {item.imageUrl ? (
               <img
                 src={item.imageUrl}
                 alt={item.title}
+                className="w-full h-full object-cover"
+              />
+            ) : item.videoUrl ? (
+              <video
+                src={item.videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -165,13 +176,22 @@ function ProjectCard({ item, index, onClick }: { item: PortfolioItem; index: num
       style={{ willChange: 'transform' }}
       onClick={onClick}
     >
-      {/* Imagem */}
+      {/* Mídia */}
       <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#0d0d0d] flex items-center justify-center">
         {item.imageUrl ? (
           <img
             src={item.imageUrl}
             alt={item.title}
             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-700"
+          />
+        ) : item.videoUrl ? (
+          <video
+            src={item.videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

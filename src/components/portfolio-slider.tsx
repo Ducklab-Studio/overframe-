@@ -9,6 +9,7 @@ export interface PortfolioItem {
   category: string;
   description: string | null;
   imageUrl: string | null;
+  videoUrl: string | null;
   projectUrl: string | null;
   featured: boolean;
 }
@@ -60,6 +61,15 @@ export function PortfolioSlider({ items }: { items: PortfolioItem[] }) {
         >
           {item.imageUrl ? (
             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+          ) : item.videoUrl ? (
+            <video
+              src={item.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full bg-[#111] flex items-center justify-center">
               <span className="text-white/10 text-6xl font-bold">OV</span>

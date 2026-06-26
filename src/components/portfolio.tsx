@@ -11,6 +11,7 @@ export async function Portfolio() {
       category: true,
       description: true,
       imageUrl: true,
+      videoUrl: true,
       projectUrl: true,
       featured: true,
       technologies: true,
