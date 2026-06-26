@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, MotionValue } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 // ── Variants ──────────────────────────────────────────────
@@ -34,7 +34,33 @@ const HEADLINE = 'Elevando marcas ao seu potencial máximo';
 const words = HEADLINE.split(' ');
 
 // ── Parallax elements ─────────────────────────────────────
-const PARALLAX_ITEMS = [
+interface ParallaxItemDef {
+  size: number; speed: number; top: string; left: string;
+  color: string; blur: number; translate: string;
+}
+
+function ParallaxItem({ el, mouseX, mouseY }: { el: ParallaxItemDef; mouseX: MotionValue<number>; mouseY: MotionValue<number> }) {
+  const x = useTransform(mouseX, (v) => v * el.speed);
+  const y = useTransform(mouseY, (v) => v * el.speed);
+  return (
+    <motion.div
+      style={{
+        x, y,
+        position: 'absolute',
+        top: el.top,
+        left: el.left,
+        translate: el.translate,
+        width: el.size,
+        height: el.size,
+        background: el.color,
+        borderRadius: '50%',
+        filter: `blur(${el.blur}px)`,
+      }}
+    />
+  );
+}
+
+const PARALLAX_ITEMS: ParallaxItemDef[] = [
   { size: 600, speed: 0.02, top: '50%', left: '50%', color: 'rgba(225,6,0,0.15)', blur: 120, translate: '-50%,-50%' },
   { size: 300, speed: 0.04, top: '20%', left: '75%', color: 'rgba(225,6,0,0.08)', blur: 80, translate: '-50%,-50%' },
   { size: 200, speed: 0.06, top: '70%', left: '20%', color: 'rgba(242,242,242,0.03)', blur: 60, translate: '-50%,-50%' },
@@ -119,28 +145,9 @@ export const Hero = () => {
 
       {/* Parallax Background Elements — desktop only */}
       <div className="absolute inset-0 pointer-events-none z-0 hidden md:block">
-        {PARALLAX_ITEMS.map((el, i) => {
-          const x = useTransform(mouseX, (v) => v * el.speed);
-          const y = useTransform(mouseY, (v) => v * el.speed);
-          return (
-            <motion.div
-              key={i}
-              style={{
-                x,
-                y,
-                position: 'absolute',
-                top: el.top,
-                left: el.left,
-                translate: el.translate,
-                width: el.size,
-                height: el.size,
-                background: el.color,
-                borderRadius: '50%',
-                filter: `blur(${el.blur}px)`,
-              }}
-            />
-          );
-        })}
+        {PARALLAX_ITEMS.map((el, i) => (
+          <ParallaxItem key={i} el={el} mouseX={mouseX} mouseY={mouseY} />
+        ))}
       </div>
 
       {/* Static glow for mobile */}

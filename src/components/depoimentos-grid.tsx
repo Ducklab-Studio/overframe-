@@ -37,7 +37,7 @@ export function DepoimentosGrid({ items }: { items: Testimonial[] }) {
           className="bg-[#111] border border-white/5 rounded-3xl p-8 flex flex-col hover:border-[#E10600]/20 transition-colors duration-500"
         >
           <StarRating rating={item.rating} />
-          <p className="text-white/60 text-sm leading-relaxed flex-1 mb-6">"{item.content}"</p>
+          <p className="text-white/60 text-sm leading-relaxed flex-1 mb-6">&ldquo;{item.content}&rdquo;</p>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#E10600]/10 border border-[#E10600]/20 flex items-center justify-center flex-shrink-0">
               <span className="text-[#E10600] font-semibold text-sm">{item.name[0]}</span>
