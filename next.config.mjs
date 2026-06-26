@@ -40,9 +40,6 @@ const nextConfig = {
   // Garante que Prisma não seja incluído no bundle do cliente
   serverExternalPackages: ['@prisma/client', 'prisma'],
 
-  serverActions: {
-    bodySizeLimit: '1mb',
-  },
 };
 
 export default nextConfig;
