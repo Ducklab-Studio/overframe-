@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type Tab = 'portfolio' | 'testimonials' | 'blog' | 'pricing';
 
@@ -181,7 +182,6 @@ function PortfolioTab() {
                     <button onClick={() => setForm(f => ({ ...f, imageUrl: '' }))} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors">×</button>
                   </div>
                 )}
-                <input className={inputCls} value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="Ou cole uma URL de imagem" />
               </div>
             </Field>
             <Field label="Vídeo do Projeto">
@@ -191,13 +191,12 @@ function PortfolioTab() {
                   {uploadingVideo ? 'Enviando vídeo...' : 'Clique para enviar vídeo'}
                   <input type="file" accept="video/mp4,video/webm,video/mov,video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadVideo(f); }} />
                 </label>
-                {form.videoUrl && (form.videoUrl.includes('cloudinary.com') || /\.(mp4|webm|mov)(\?|$)/i.test(form.videoUrl)) && (
+                {form.videoUrl && (
                   <div className="relative w-full rounded-lg overflow-hidden bg-black/40">
                     <video src={form.videoUrl} controls className="w-full max-h-48 object-cover" />
                     <button onClick={() => setForm(f => ({ ...f, videoUrl: '' }))} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors">×</button>
                   </div>
                 )}
-                <input className={inputCls} value={form.videoUrl} onChange={e => setForm(f => ({ ...f, videoUrl: e.target.value }))} placeholder="Ou cole URL: YouTube, Vimeo, .mp4..." />
               </div>
             </Field>
             <Field label="URL do Projeto"><input className={inputCls} value={form.projectUrl} onChange={e => setForm(f => ({ ...f, projectUrl: e.target.value }))} placeholder="https://..." /></Field>
@@ -479,9 +478,9 @@ export default function Dashboard() {
             </button>
           ))}
         </nav>
-        <a href="/" target="_blank" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/25 hover:text-white/60 transition-colors">
-          <span>↗</span> Ver site
-        </a>
+        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/25 hover:text-white/60 transition-colors">
+          <span>←</span> Ver site
+        </Link>
         <button onClick={logout} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/25 hover:text-white/60 transition-colors">
           <span>→</span> Sair
         </button>

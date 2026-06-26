@@ -17,7 +17,11 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self'",
+      // Vídeos servidos pelo Cloudinary (<video><source>)
+      "media-src 'self' blob: data: https://res.cloudinary.com",
+      // Embeds de YouTube/Vimeo no modal do portfólio
+      "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+      "connect-src 'self' https://res.cloudinary.com",
       "frame-ancestors 'none'",
     ].join('; '),
   },

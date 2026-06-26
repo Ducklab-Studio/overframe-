@@ -35,6 +35,8 @@ export function BlogGrid({ posts }: { posts: BlogPost[] }) {
               <img
                 src={post.coverImage}
                 alt={post.title}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
               />
             ) : (

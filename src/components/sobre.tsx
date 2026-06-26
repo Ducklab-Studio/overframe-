@@ -62,8 +62,10 @@ export const Sobre = () => {
           >
             <div className="w-full aspect-square md:aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-[#111111] border border-white/5">
               <img
-                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop"
                 alt="Studio Overframer"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover opacity-70 hover:opacity-100 transition-opacity duration-700"
               />
             </div>

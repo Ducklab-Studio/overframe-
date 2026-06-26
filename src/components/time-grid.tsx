@@ -48,7 +48,7 @@ export function TimeGrid({ members }: { members: TeamMember[] }) {
             {/* Avatar */}
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-white/5 group-hover:border-[#E10600]/30 transition-all duration-500 mb-4 flex-shrink-0">
               {member.avatarUrl ? (
-                <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
+                <img src={member.avatarUrl} alt={member.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-[#E10600]/10 flex items-center justify-center">
                   <span className="text-[#E10600] font-bold text-lg">{initials}</span>

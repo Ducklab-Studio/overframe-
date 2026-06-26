@@ -71,12 +71,16 @@ export const Navbar = () => {
             <img
               src="/logo%20sem%20fundo/logo%20sem%20fundo-mobile.png"
               alt="Overframe Logo"
+              fetchPriority="high"
+              decoding="async"
               className="h-16 w-auto object-contain lg:hidden"
             />
             {/* Desktop: ícone + nome */}
             <img
               src="/logo%20sem%20fundo/logo%20sem%20fundo%20maior%20e%20com%20nome-pc.png"
               alt="Overframe Logo"
+              fetchPriority="high"
+              decoding="async"
               className="h-20 w-auto object-contain hidden lg:block"
             />
           </Link>
