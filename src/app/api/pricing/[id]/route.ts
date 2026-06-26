@@ -15,7 +15,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const plan = await prisma.pricingPlan.update({ where: { id }, data });
     return NextResponse.json(plan);
   } catch (e: unknown) {
-    if (e instanceof ZodError) return NextResponse.json({ error: e.errors }, { status: 422 });
+    if (e instanceof ZodError) return NextResponse.json({ error: e.issues }, { status: 422 });
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
 }

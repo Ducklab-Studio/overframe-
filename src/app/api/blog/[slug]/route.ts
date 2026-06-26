@@ -36,7 +36,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
     });
     return NextResponse.json(post);
   } catch (e: unknown) {
-    if (e instanceof ZodError) return NextResponse.json({ error: e.errors }, { status: 422 });
+    if (e instanceof ZodError) return NextResponse.json({ error: e.issues }, { status: 422 });
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
 }

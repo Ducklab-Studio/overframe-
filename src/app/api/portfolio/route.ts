@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const item = await prisma.portfolio.create({ data });
     return NextResponse.json(item, { status: 201 });
   } catch (e: unknown) {
-    if (e instanceof ZodError) return NextResponse.json({ error: e.errors }, { status: 422 });
+    if (e instanceof ZodError) return NextResponse.json({ error: e.issues }, { status: 422 });
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
 }
