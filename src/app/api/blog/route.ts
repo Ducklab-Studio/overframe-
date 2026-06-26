@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ZodError } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
 import { blogPostSchema } from '@/lib/validators';
@@ -16,7 +17,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const wantsUnpublished = searchParams.get('published') === 'false';
 
-    // Rascunhos só para admins autenticados
     const admin = wantsUnpublished ? await isAdmin() : false;
     const where = admin ? {} : { published: true };
 
@@ -41,14 +41,18 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const data = blogPostSchema.parse(body);
-    if (data.published && !data.publishedAt) {
-      (data as any).publishedAt = new Date().toISOString();
-    }
-    const post = await prisma.blogPost.create({ data: data as any });
+    const parsed = blogPostSchema.parse(body);
+    const post = await prisma.blogPost.create({
+      data: {
+        ...parsed,
+        publishedAt: parsed.published && !parsed.publishedAt
+          ? new Date().toISOString()
+          : (parsed.publishedAt ?? null),
+      },
+    });
     return NextResponse.json(post, { status: 201 });
-  } catch (e: any) {
-    if (e?.name === 'ZodError') return NextResponse.json({ error: e.errors }, { status: 422 });
+  } catch (e: unknown) {
+    if (e instanceof ZodError) return NextResponse.json({ error: e.errors }, { status: 422 });
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ZodError } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
 import { blogPostSchema } from '@/lib/validators';
@@ -23,14 +24,19 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
   try {
     const { slug } = await params;
     const body = await req.json();
-    const data = blogPostSchema.partial().parse(body);
-    if (data.published && !data.publishedAt) {
-      (data as any).publishedAt = new Date().toISOString();
-    }
-    const post = await prisma.blogPost.update({ where: { slug }, data: data as any });
+    const parsed = blogPostSchema.partial().parse(body);
+    const post = await prisma.blogPost.update({
+      where: { slug },
+      data: {
+        ...parsed,
+        publishedAt: parsed.published && !parsed.publishedAt
+          ? new Date().toISOString()
+          : parsed.publishedAt,
+      },
+    });
     return NextResponse.json(post);
-  } catch (e: any) {
-    if (e?.name === 'ZodError') return NextResponse.json({ error: e.errors }, { status: 422 });
+  } catch (e: unknown) {
+    if (e instanceof ZodError) return NextResponse.json({ error: e.errors }, { status: 422 });
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
 }

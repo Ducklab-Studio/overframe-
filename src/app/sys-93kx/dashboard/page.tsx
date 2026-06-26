@@ -5,6 +5,51 @@ import { useRouter } from 'next/navigation';
 
 type Tab = 'portfolio' | 'testimonials' | 'blog' | 'pricing';
 
+interface PortfolioItem {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  imageUrl: string;
+  videoUrl: string | null;
+  projectUrl: string;
+  featured: boolean;
+  order: number;
+}
+
+interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  content: string;
+  rating: number;
+  featured: boolean;
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  author: string;
+  published: boolean;
+  publishedAt: string | null;
+}
+
+interface PricingPlan {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  period: string;
+  features: string[];
+  highlighted: boolean;
+  order: number;
+}
+
 /* ─── helpers ─────────────────────────────────────────────── */
 function toast(msg: string, type: 'ok' | 'err' = 'ok') {
   const el = document.createElement('div');
@@ -44,8 +89,8 @@ const inputCls = "w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-
 
 /* ─── Portfolio ────────────────────────────────────────────── */
 function PortfolioTab() {
-  const [items, setItems] = useState<any[]>([]);
-  const [modal, setModal] = useState<null | 'new' | any>(null);
+  const [items, setItems] = useState<PortfolioItem[]>([]);
+  const [modal, setModal] = useState<null | 'new' | PortfolioItem>(null);
   const [form, setForm] = useState({ title: '', category: '', description: '', imageUrl: '', videoUrl: '', projectUrl: '', featured: false, order: 0 });
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
@@ -64,12 +109,12 @@ function PortfolioTab() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const openEdit = (item: any) => { setForm({ ...item, videoUrl: item.videoUrl ?? '' }); setModal(item); };
+  const openEdit = (item: PortfolioItem) => { setForm({ ...item, videoUrl: item.videoUrl ?? '' }); setModal(item); };
   const openNew = () => { setForm({ title: '', category: '', description: '', imageUrl: '', videoUrl: '', projectUrl: '', featured: false, order: 0 }); setModal('new'); };
 
   const save = async () => {
     const isNew = modal === 'new';
-    const url = isNew ? '/api/portfolio' : `/api/portfolio/${modal.id}`;
+    const url = isNew ? '/api/portfolio' : `/api/portfolio/${(modal as PortfolioItem).id}`;
     const method = isNew ? 'POST' : 'PUT';
     const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     if (r.ok) { toast(isNew ? 'Projeto criado!' : 'Projeto atualizado!'); setModal(null); load(); }
@@ -149,19 +194,19 @@ function PortfolioTab() {
 
 /* ─── Testimonials ────────────────────────────────────────── */
 function TestimonialsTab() {
-  const [items, setItems] = useState<any[]>([]);
-  const [modal, setModal] = useState<null | 'new' | any>(null);
+  const [items, setItems] = useState<Testimonial[]>([]);
+  const [modal, setModal] = useState<null | 'new' | Testimonial>(null);
   const [form, setForm] = useState({ name: '', role: '', company: '', content: '', rating: 5, featured: false });
 
   const load = useCallback(async () => { const r = await fetch('/api/testimonials'); setItems(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
 
-  const openEdit = (item: any) => { setForm(item); setModal(item); };
+  const openEdit = (item: Testimonial) => { setForm(item); setModal(item); };
   const openNew = () => { setForm({ name: '', role: '', company: '', content: '', rating: 5, featured: false }); setModal('new'); };
 
   const save = async () => {
     const isNew = modal === 'new';
-    const url = isNew ? '/api/testimonials' : `/api/testimonials/${modal.id}`;
+    const url = isNew ? '/api/testimonials' : `/api/testimonials/${(modal as Testimonial).id}`;
     const r = await fetch(url, { method: isNew ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     if (r.ok) { toast(isNew ? 'Criado!' : 'Atualizado!'); setModal(null); load(); } else toast('Erro', 'err');
   };
@@ -220,14 +265,14 @@ function TestimonialsTab() {
 
 /* ─── Blog ────────────────────────────────────────────────── */
 function BlogTab() {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [modal, setModal] = useState<null | 'new' | any>(null);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [modal, setModal] = useState<null | 'new' | BlogPost>(null);
   const [form, setForm] = useState({ title: '', slug: '', excerpt: '', content: '', coverImage: '', author: 'Overframe', published: false });
 
   const load = useCallback(async () => { const r = await fetch('/api/blog?published=false'); setPosts(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
 
-  const openEdit = (post: any) => { setForm(post); setModal(post); };
+  const openEdit = (post: BlogPost) => { setForm(post); setModal(post); };
   const openNew = () => { setForm({ title: '', slug: '', excerpt: '', content: '', coverImage: '', author: 'Overframe', published: false }); setModal('new'); };
 
   const autoSlug = (title: string) =>
@@ -235,7 +280,7 @@ function BlogTab() {
 
   const save = async () => {
     const isNew = modal === 'new';
-    const url = isNew ? '/api/blog' : `/api/blog/${modal.slug}`;
+    const url = isNew ? '/api/blog' : `/api/blog/${(modal as BlogPost).slug}`;
     const r = await fetch(url, { method: isNew ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     if (r.ok) { toast(isNew ? 'Post criado!' : 'Post atualizado!'); setModal(null); load(); } else toast('Erro', 'err');
   };
@@ -293,14 +338,14 @@ function BlogTab() {
 
 /* ─── Pricing ─────────────────────────────────────────────── */
 function PricingTab() {
-  const [plans, setPlans] = useState<any[]>([]);
-  const [modal, setModal] = useState<null | 'new' | any>(null);
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [modal, setModal] = useState<null | 'new' | PricingPlan>(null);
   const [form, setForm] = useState({ name: '', description: '', price: '', period: 'projeto', features: '', highlighted: false, order: 0 });
 
   const load = useCallback(async () => { const r = await fetch('/api/pricing'); setPlans(await r.json()); }, []);
   useEffect(() => { load(); }, [load]);
 
-  const openEdit = (plan: any) => {
+  const openEdit = (plan: PricingPlan) => {
     setForm({ ...plan, price: String(plan.price), features: Array.isArray(plan.features) ? plan.features.join('\n') : '' });
     setModal(plan);
   };
@@ -308,7 +353,7 @@ function PricingTab() {
 
   const save = async () => {
     const isNew = modal === 'new';
-    const url = isNew ? '/api/pricing' : `/api/pricing/${modal.id}`;
+    const url = isNew ? '/api/pricing' : `/api/pricing/${(modal as PricingPlan).id}`;
     const payload = { ...form, price: parseFloat(form.price), features: form.features.split('\n').filter(Boolean) };
     const r = await fetch(url, { method: isNew ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (r.ok) { toast(isNew ? 'Plano criado!' : 'Plano atualizado!'); setModal(null); load(); } else toast('Erro', 'err');
