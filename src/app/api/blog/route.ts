@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 
 async function isAdmin() {
-  const token = cookies().get('ov_admin')?.value;
+  const token = (await cookies()).get('ov_admin')?.value;
   if (!token) return false;
   return !!(await verifyToken(token));
 }

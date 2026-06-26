@@ -14,18 +14,20 @@ const schema = z.object({
   order: z.number().int().optional(),
 });
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const err = await requireAdmin();
   if (err) return err;
+  const { id } = await params;
   const body = schema.safeParse(await req.json());
   if (!body.success) return NextResponse.json({ error: body.error.flatten() }, { status: 400 });
-  const member = await prisma.teamMember.update({ where: { id: params.id }, data: body.data });
+  const member = await prisma.teamMember.update({ where: { id }, data: body.data });
   return NextResponse.json(member);
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const err = await requireAdmin();
   if (err) return err;
-  await prisma.teamMember.delete({ where: { id: params.id } });
+  const { id } = await params;
+  await prisma.teamMember.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }
