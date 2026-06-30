@@ -1,8 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+declare global {
+  interface Window {
+    cloudinary: {
+      createUploadWidget: (
+        options: Record<string, unknown>,
+        callback: (error: unknown, result: { event: string; info: { secure_url: string } }) => void,
+      ) => { open: () => void; close: () => void; destroy: () => void };
+    };
+  }
+}
 
 type Tab = 'portfolio' | 'team' | 'testimonials' | 'blog' | 'pricing';
 
@@ -108,8 +119,17 @@ function PortfolioTab() {
   const [form, setForm] = useState({ title: '', category: '', description: '', imageUrl: '', videoUrl: '', projectUrl: '', featured: false, order: 0, technologies: [] as string[] });
   const [techInput, setTechInput] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [videoProgress, setVideoProgress] = useState(0);
+  const videoWidgetRef = useRef<{ open: () => void; close: () => void; destroy: () => void } | null>(null);
+
+  // Carrega o script do Cloudinary Upload Widget uma vez
+  useEffect(() => {
+    if (document.getElementById('cld-widget-script')) return;
+    const s = document.createElement('script');
+    s.id = 'cld-widget-script';
+    s.src = 'https://upload-widget.cloudinary.com/global/all.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }, []);
 
   const uploadImage = async (file: File) => {
     setUploading(true);
@@ -129,59 +149,89 @@ function PortfolioTab() {
     }
   };
 
-  const uploadVideo = async (file: File) => {
-    setUploadingVideo(true);
-    setVideoProgress(0);
-    try {
-      const sigRes = await fetch('/api/upload/signature', { method: 'POST' });
-      if (!sigRes.ok) {
-        const body = await sigRes.json().catch(() => ({}));
-        toast(body?.error ?? 'Erro ao gerar assinatura', 'err');
-        return;
-      }
-      const { signature, timestamp, cloudName, apiKey, folder } = await sigRes.json();
-
-      if (!cloudName || !apiKey || !signature) {
-        toast('Configuração do Cloudinary incompleta', 'err');
-        return;
-      }
-
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('resource_type', 'video');
-      fd.append('signature', signature);
-      fd.append('timestamp', String(timestamp));
-      fd.append('api_key', apiKey);
-      fd.append('folder', folder);
-
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setVideoProgress(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const result = JSON.parse(xhr.responseText);
-            setForm(f => ({ ...f, videoUrl: result.secure_url }));
-            toast('Vídeo enviado!');
-            resolve();
-          } else {
-            let msg = 'Upload falhou';
-            try { msg = JSON.parse(xhr.responseText)?.error?.message ?? `Erro ${xhr.status}`; } catch {}
-            reject(new Error(msg));
-          }
-        };
-        xhr.onerror = () => reject(new Error('Bloqueado pelo navegador (CSP/CORS) — recarregue a página'));
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
-        xhr.send(fd);
-      });
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Erro no upload do vídeo', 'err');
-    } finally {
-      setUploadingVideo(false);
-      setVideoProgress(0);
+  const openVideoWidget = useCallback(async () => {
+    if (!window.cloudinary) {
+      toast('Widget ainda carregando, aguarde um segundo', 'err');
+      return;
     }
-  };
+
+    // Destruir instância anterior para evitar duplicatas
+    videoWidgetRef.current?.destroy();
+
+    const sigRes = await fetch('/api/upload/signature', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ timestamp: Math.round(Date.now() / 1000), folder: 'overframe' }),
+    });
+    if (!sigRes.ok) { toast('Erro ao conectar com Cloudinary', 'err'); return; }
+    const { cloudName, apiKey } = await sigRes.json();
+
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName,
+        apiKey,
+        uploadSignature: async (
+          callback: (sig: Record<string, unknown>) => void,
+          paramsToSign: Record<string, string | number>,
+        ) => {
+          const res = await fetch('/api/upload/signature', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(paramsToSign),
+          });
+          const data = await res.json();
+          callback(data);
+        },
+        folder: 'overframe',
+        resourceType: 'video',
+        clientAllowedFormats: ['mp4', 'webm', 'mov', 'avi', 'mkv'],
+        maxFileSize: 500_000_000,
+        sources: ['local', 'url', 'camera', 'google_drive', 'dropbox'],
+        multiple: false,
+        language: 'pt',
+        text: {
+          pt: {
+            or: 'ou',
+            browse: 'Procurar',
+            back: 'Voltar',
+            close: 'Fechar',
+            drop_files_here: 'Arraste o vídeo aqui',
+            local_files: 'Meus Arquivos',
+            camera: 'Câmera',
+            web_address: 'URL',
+            my_files: 'Meus Arquivos',
+          },
+        },
+        styles: {
+          palette: {
+            window: '#111111',
+            windowBorder: '#333333',
+            tabIcon: '#E10600',
+            menuIcons: '#cccccc',
+            textDark: '#ffffff',
+            textLight: '#cccccc',
+            link: '#E10600',
+            action: '#E10600',
+            inactiveTabIcon: '#666666',
+            error: '#E10600',
+            inProgress: '#E10600',
+            complete: '#00c29a',
+            sourceBg: '#1a1a1a',
+          },
+        },
+      },
+      (error: unknown, result: { event: string; info: { secure_url: string } }) => {
+        if (!error && result?.event === 'success') {
+          setForm(f => ({ ...f, videoUrl: result.info.secure_url }));
+          toast('Vídeo enviado!');
+          widget.close();
+        }
+      },
+    );
+
+    videoWidgetRef.current = widget;
+    widget.open();
+  }, []);
 
   const load = useCallback(async () => {
     const r = await fetch('/api/portfolio'); setItems(await r.json());
@@ -253,16 +303,14 @@ function PortfolioTab() {
             </Field>
             <Field label="Vídeo do Projeto">
               <div className="space-y-2">
-                <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg border-2 border-dashed border-white/10 cursor-pointer hover:border-[#E10600]/40 transition-colors text-sm text-white/40 hover:text-white/70 ${uploadingVideo ? 'opacity-50 pointer-events-none' : ''}`}>
+                <button
+                  type="button"
+                  onClick={openVideoWidget}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border-2 border-dashed border-white/10 cursor-pointer hover:border-[#E10600]/40 transition-colors text-sm text-white/40 hover:text-white/70"
+                >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" /></svg>
-                  {uploadingVideo ? `Enviando... ${videoProgress}%` : 'Clique para enviar vídeo'}
-                  <input type="file" accept="video/mp4,video/webm,video/mov,video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadVideo(f); }} />
-                </label>
-                {uploadingVideo && (
-                  <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                    <div className="h-full bg-[#E10600] rounded-full transition-all duration-200" style={{ width: `${videoProgress}%` }} />
-                  </div>
-                )}
+                  Clique para enviar vídeo
+                </button>
                 {form.videoUrl && (
                   <div className="relative w-full rounded-lg overflow-hidden bg-black/40">
                     <video src={form.videoUrl} controls className="w-full max-h-48 object-cover" />
