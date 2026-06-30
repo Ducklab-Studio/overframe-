@@ -134,11 +134,21 @@ function PortfolioTab() {
     setVideoProgress(0);
     try {
       const sigRes = await fetch('/api/upload/signature', { method: 'POST' });
-      if (!sigRes.ok) { toast('Erro ao iniciar upload', 'err'); return; }
+      if (!sigRes.ok) {
+        const body = await sigRes.json().catch(() => ({}));
+        toast(body?.error ?? 'Erro ao gerar assinatura', 'err');
+        return;
+      }
       const { signature, timestamp, cloudName, apiKey, folder } = await sigRes.json();
+
+      if (!cloudName || !apiKey || !signature) {
+        toast('Configuração do Cloudinary incompleta', 'err');
+        return;
+      }
 
       const fd = new FormData();
       fd.append('file', file);
+      fd.append('resource_type', 'video');
       fd.append('signature', signature);
       fd.append('timestamp', String(timestamp));
       fd.append('api_key', apiKey);
@@ -150,21 +160,23 @@ function PortfolioTab() {
           if (e.lengthComputable) setVideoProgress(Math.round((e.loaded / e.total) * 100));
         };
         xhr.onload = () => {
-          if (xhr.status === 200) {
+          if (xhr.status >= 200 && xhr.status < 300) {
             const result = JSON.parse(xhr.responseText);
             setForm(f => ({ ...f, videoUrl: result.secure_url }));
             toast('Vídeo enviado!');
             resolve();
           } else {
-            reject(new Error('Upload falhou'));
+            let msg = 'Upload falhou';
+            try { msg = JSON.parse(xhr.responseText)?.error?.message ?? `Erro ${xhr.status}`; } catch {}
+            reject(new Error(msg));
           }
         };
-        xhr.onerror = () => reject(new Error('Erro de rede'));
+        xhr.onerror = () => reject(new Error('Bloqueado pelo navegador (CSP/CORS) — recarregue a página'));
         xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
         xhr.send(fd);
       });
-    } catch {
-      toast('Erro no upload do vídeo', 'err');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro no upload do vídeo', 'err');
     } finally {
       setUploadingVideo(false);
       setVideoProgress(0);
