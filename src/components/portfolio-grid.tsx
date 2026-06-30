@@ -159,13 +159,13 @@ function CardMedia({ item }: { item: PortfolioItem }) {
       {/* Badge de tipo no canto superior esquerdo */}
       <div className="absolute top-2.5 left-2.5 z-10">
         {hasVideo ? (
-          <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white text-[10px] font-semibold">
+          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E10600] text-white text-[10px] font-bold shadow-lg">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
             Vídeo
           </span>
         ) : thumbnail ? (
-          <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white text-[10px] font-semibold">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 text-black text-[10px] font-bold shadow-lg">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21"/></svg>
             Foto
           </span>
         ) : null}
@@ -372,27 +372,28 @@ export function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
 
   const currentItems = filteredItems.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
-  const filterTabs: { id: Filter; label: string; count: number }[] = [
-    { id: 'all', label: 'Todos', count: items.length },
-    { id: 'video', label: 'Vídeos', count: videoCount },
-    { id: 'image', label: 'Fotos', count: imageCount },
-  ];
+  const filterTabs: { id: Filter; label: string; count: number; icon: string }[] = [
+    { id: 'all',   label: 'Todos',   count: items.length, icon: '◈' },
+    { id: 'video', label: 'Vídeos',  count: videoCount,   icon: '▶' },
+    { id: 'image', label: 'Fotos',   count: imageCount,   icon: '◻' },
+  ].filter(t => t.id === 'all' || t.count > 0);
 
   return (
     <div className="flex flex-col items-center w-full">
-      {/* Filtros */}
-      {(videoCount > 0 && imageCount > 0) && (
-        <div className="flex items-center gap-2 mb-8 self-start">
+      {/* Filtros — sempre visíveis quando há itens */}
+      {items.length > 0 && filterTabs.length > 1 && (
+        <div className="flex items-center gap-2 mb-8 self-start flex-wrap">
           {filterTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 filter === tab.id
-                  ? 'bg-[#E10600] text-white'
+                  ? 'bg-[#E10600] text-white shadow-[0_0_16px_rgba(225,6,0,0.35)]'
                   : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80 border border-white/10'
               }`}
             >
+              <span className="text-[11px]">{tab.icon}</span>
               {tab.label}
               <span className={`text-xs px-1.5 py-0.5 rounded-full ${filter === tab.id ? 'bg-white/20 text-white' : 'bg-white/10 text-white/40'}`}>
                 {tab.count}
