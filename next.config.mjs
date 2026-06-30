@@ -21,7 +21,7 @@ const securityHeaders = [
       "media-src 'self' blob: data: https://res.cloudinary.com",
       // Embeds de YouTube/Vimeo no modal do portfólio
       "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
-      "connect-src 'self' https://res.cloudinary.com",
+      "connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com",
       "frame-ancestors 'none'",
     ].join('; '),
   },

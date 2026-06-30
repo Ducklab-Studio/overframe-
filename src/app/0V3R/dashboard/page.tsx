@@ -109,6 +109,7 @@ function PortfolioTab() {
   const [techInput, setTechInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
 
   const uploadImage = async (file: File) => {
     setUploading(true);
@@ -130,19 +131,43 @@ function PortfolioTab() {
 
   const uploadVideo = async (file: File) => {
     setUploadingVideo(true);
+    setVideoProgress(0);
     try {
+      const sigRes = await fetch('/api/upload/signature', { method: 'POST' });
+      if (!sigRes.ok) { toast('Erro ao iniciar upload', 'err'); return; }
+      const { signature, timestamp, cloudName, apiKey, folder } = await sigRes.json();
+
       const fd = new FormData();
       fd.append('file', file);
-      const r = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (r.ok) {
-        const { url } = await r.json();
-        setForm(f => ({ ...f, videoUrl: url }));
-        toast('Vídeo enviado!');
-      } else {
-        toast('Erro no upload do vídeo', 'err');
-      }
+      fd.append('signature', signature);
+      fd.append('timestamp', String(timestamp));
+      fd.append('api_key', apiKey);
+      fd.append('folder', folder);
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setVideoProgress(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const result = JSON.parse(xhr.responseText);
+            setForm(f => ({ ...f, videoUrl: result.secure_url }));
+            toast('Vídeo enviado!');
+            resolve();
+          } else {
+            reject(new Error('Upload falhou'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Erro de rede'));
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+        xhr.send(fd);
+      });
+    } catch {
+      toast('Erro no upload do vídeo', 'err');
     } finally {
       setUploadingVideo(false);
+      setVideoProgress(0);
     }
   };
 
@@ -218,9 +243,14 @@ function PortfolioTab() {
               <div className="space-y-2">
                 <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-lg border-2 border-dashed border-white/10 cursor-pointer hover:border-[#E10600]/40 transition-colors text-sm text-white/40 hover:text-white/70 ${uploadingVideo ? 'opacity-50 pointer-events-none' : ''}`}>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" /></svg>
-                  {uploadingVideo ? 'Enviando vídeo...' : 'Clique para enviar vídeo'}
+                  {uploadingVideo ? `Enviando... ${videoProgress}%` : 'Clique para enviar vídeo'}
                   <input type="file" accept="video/mp4,video/webm,video/mov,video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadVideo(f); }} />
                 </label>
+                {uploadingVideo && (
+                  <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                    <div className="h-full bg-[#E10600] rounded-full transition-all duration-200" style={{ width: `${videoProgress}%` }} />
+                  </div>
+                )}
                 {form.videoUrl && (
                   <div className="relative w-full rounded-lg overflow-hidden bg-black/40">
                     <video src={form.videoUrl} controls className="w-full max-h-48 object-cover" />
