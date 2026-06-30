@@ -372,11 +372,12 @@ export function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
 
   const currentItems = filteredItems.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
-  const filterTabs: { id: Filter; label: string; count: number; icon: string }[] = [
+  const allFilterTabs: { id: Filter; label: string; count: number; icon: string }[] = [
     { id: 'all',   label: 'Todos',   count: items.length, icon: '◈' },
     { id: 'video', label: 'Vídeos',  count: videoCount,   icon: '▶' },
     { id: 'image', label: 'Fotos',   count: imageCount,   icon: '◻' },
-  ].filter(t => t.id === 'all' || t.count > 0);
+  ];
+  const filterTabs = allFilterTabs.filter(t => t.id === 'all' || t.count > 0);
 
   return (
     <div className="flex flex-col items-center w-full">
